@@ -240,7 +240,7 @@ struct card* flush(struct card* seven_cards){
 }
 
 struct card* straight(struct card* seven_cards) {
-
+	
     int has_2 = 0, has_3 = 0, has_4 = 0, has_14 = 0;
     for (int i = 0; i < 7; ++i) {
         if (seven_cards[i].value == 2) has_2 = 1;
@@ -257,15 +257,24 @@ struct card* straight(struct card* seven_cards) {
         }
     }
 
+    int j = 0;
+    for (int i = 0; i < 7; ++i){
+        for (j = 0; j < 7; ++j){
+            if (seven_cards[i].value == seven_cards[j].value && i!=j){
+                seven_cards[j].value = -1;
+            }
+        }
+    }
+
     qsort(seven_cards, 7, sizeof(struct card), compare_cards);
+
     struct card* straight = malloc(5*sizeof(struct card));
     for (int i = 0; i < 5; ++i){
         straight[i].value = -1;//if it not straight
         straight[i].suit = 'n';
     }
-
+	
     int k = 1;
-
     for (int i = 0; i < 7; ++i){
         for (int j = 0; j < 7; ++j){
             if (seven_cards[i].value+1 == seven_cards[j].value){
@@ -302,7 +311,6 @@ struct card* straight(struct card* seven_cards) {
         straight[l].value = -1;//if it not straight
         straight[l].suit = 'n';
     }
-
     return straight;
 }
 
