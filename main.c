@@ -102,12 +102,17 @@ struct card* pair_checker(struct card* seven_cards){
         pair[i].value = -1;//if it not pair
         pair[i].suit = 'n';
     }
-    for (int i = 0; i < 7; ++i){
-        for (int j = 0; j < 7; ++j){
-            if (j!=i && seven_cards[i].value == seven_cards[j].value && seven_cards[i].value > pair[0].value){
-                pair[0] = seven_cards[i];
-                pair[1] = seven_cards[j];
-            }
+    int i=0;
+    int j=0;
+
+    for (int i = 0; i < 7; ){
+        if (j!=i && j>i && seven_cards[i].value == seven_cards[i+1].value && seven_cards[i].value > pair[0].value ){
+            pair[0] = seven_cards[i];
+            pair[1] = seven_cards[j];
+        }
+        else{
+            i=j;
+            j=i+1;
         }
     }
     return pair;
