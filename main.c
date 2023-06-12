@@ -98,7 +98,7 @@ struct player_attrib* set_hand_cards(struct player_attrib* positions, struct car
     return positions;
 }
 
-struct card* pair_checker(struct card* seven_cards){
+struct card* pair(struct card* seven_cards){
     struct card* pair = malloc(2 * sizeof(struct card));
     int i = 0;
     for (i = 0; i < 2; ++i){
@@ -116,7 +116,7 @@ struct card* pair_checker(struct card* seven_cards){
     return pair;
 }
 
-struct card* two_pair_checker(struct card* seven_cards){
+struct card* two_pair(struct card* seven_cards){
     struct card* pairs = malloc(4 * sizeof(struct card));
     int i,j = 0;
     for (i = 0; i < 4; ++i){
@@ -370,10 +370,10 @@ struct card* find_best_combo(struct card* seven_cards) {
     combo = three_of_a_kind(seven_cards);
     if(combo != NULL) return combo;
 
-    combo = two_pair_checker(seven_cards);
+    combo = two_pair(seven_cards);
     if(combo != NULL) return combo;
 
-    combo = pair_checker(seven_cards);
+    combo = pair(seven_cards);
     if(combo != NULL) return combo;
 
     return NULL;  // No valid combination found
@@ -432,7 +432,7 @@ int main(int argc, char const *argv[]){
     struct card* flush_combo = malloc(5 * sizeof(struct card));
     struct card* straight_combo = malloc(5 * sizeof(struct card));
     struct card* full_combo = malloc(5 * sizeof(struct card));
-    two_pair_combo = two_pair_checker(seven_cards);
+    two_pair_combo = two_pair(seven_cards);
     three_of_a_kind_combo = three_of_a_kind(seven_cards);
     square_combo = square(seven_cards);
     flush_combo = flush(seven_cards);
