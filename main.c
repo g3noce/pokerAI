@@ -293,14 +293,47 @@ struct card* straight_flush(struct card* seven_cards){
 
 struct card* full(struct card* seven_cards){
     struct card* full = malloc(5 * sizeof(struct card));
-    struct card* four = malloc(4 * sizeof(struct card));
-    for (int i = 0; i < 7; ++i){
-        
-    }
-    for(int i = 0; i < 5; ++i){
-        full[i].value = -1;//if it not a full
+    int i,j = 0;
+    for (i = 0; i < 5; ++i){
+        full[i].value = -1;
         full[i].suit = 'n';
     }
+
+    struct card* three_of_a_kind_check = malloc(3 * sizeof(struct card));
+    struct card* four_cards = malloc(4 * sizeof(struct card));
+
+    three_of_a_kind_check = three_of_a_kind(seven_cards);
+
+    full[0] = three_of_a_kind_check[0];
+    full[1] = three_of_a_kind_check[1];
+    full[2] = three_of_a_kind_check[2];
+
+    free(three_of_a_kind_check);
+
+    for (i = 0; i < 7; ++i){
+        if(seven_cards[i].value == full[0].value) i+=3;
+        four_cards[j] = seven_cards[i];
+        j++;
+    }
+    for (int i = 0; i < 4; ++i)
+    {
+    printf("%d%c:\n",four_cards[i].value,four_cards[i].suit);
+    }
+
+    i = 0;
+    j = 0;
+    for (i = 0; i < 4; ++i){
+        if (four_cards[i].value == four_cards[i+1].value && four_cards[i].value > full[3].value ){
+            full[3] = four_cards[i];
+            full[4] = four_cards[i+1];
+            if (i >= 3){
+                free(four_cards);
+                return full;
+            }
+        }
+    }
+
+    free(four_cards);
     return full;
 }
 
@@ -355,20 +388,20 @@ int main(int argc, char const *argv[]){
 
     qsort(visibles_cards, 5, sizeof(struct card), compare_cards);
 
-    /*visibles_cards[0].value = 14;
-    visibles_cards[1].value = 2;
-    visibles_cards[2].value = 3;
-    visibles_cards[3].value = 4;
+    visibles_cards[0].value = 2;
+    visibles_cards[1].value = 3;
+    visibles_cards[2].value = 2;
+    visibles_cards[3].value = 3;
     visibles_cards[4].value = 5;
     players[0].hand[0].value = 6;
-    players[0].hand[1].value = 7;
+    players[0].hand[1].value = 3;
     visibles_cards[0].suit = 'A';
     visibles_cards[1].suit = 'B';
     visibles_cards[2].suit = 'C';
     visibles_cards[3].suit = 'D';
     visibles_cards[4].suit = 'E';
     players[0].hand[0].suit = 'F';
-    players[0].hand[1].suit = 'G';*/
+    players[0].hand[1].suit = 'G';
 
     struct card* seven_cards = malloc(7 * sizeof(struct card));
 
