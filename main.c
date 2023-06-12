@@ -151,7 +151,6 @@ struct card* two_pair(struct card* seven_cards){
             }
         }
     }
-
     free(five_cards);
     return pairs;
 }
@@ -184,7 +183,7 @@ struct card* square(struct card* seven_cards){
         square[i].suit = 'n';
     }
     for (i = 0; i < 4; ++i){
-        if (seven_cards[i].value == seven_cards[i+1].value && seven_cards[i].value == seven_cards[i+2].value 
+        if (seven_cards[i].value == seven_cards[i+1].value && seven_cards[i].value == seven_cards[i+2].value
             && seven_cards[i].value == seven_cards[i+3].value && seven_cards[i].value > square[0].value ){
             square[0] = seven_cards[i];
             square[1] = seven_cards[i+1];
@@ -230,16 +229,28 @@ struct card* flush(struct card* seven_cards){
 
 struct card* straight(struct card* seven_cards) {
     struct card* seven_cards_loc = malloc(5*sizeof(struct card));
-    for (int i = 0; i < 7; ++i) seven_cards_loc[i] = seven_cards[i];
+    int i,j = 0;
+    for (i = 0; i < 7; ++i) seven_cards_loc[i] = seven_cards[i];
+    struct card* straight = malloc(5*sizeof(struct card));
+
+    i,j = 0;
+    for (i = 0; i < 5; ++i){
+        straight[i].value = -1;//if it not straight
+        straight[i].suit = 'n';
+    }
+
+    i,j = 0;
     int has_2 = 0, has_3 = 0, has_4 = 0, has_14 = 0;
-    for (int i = 0; i < 7; ++i) {
+    for (i = 0; i < 7; ++i) {
         if (seven_cards_loc[i].value == 2) has_2 = 1;
         if (seven_cards_loc[i].value == 3) has_3 = 1;
         if (seven_cards_loc[i].value == 4) has_4 = 1;
         if (seven_cards_loc[i].value == 14) has_14 = 1;
     }
+
+    i,j = 0;
     if (has_2 && has_3 && has_4 && has_14) {
-        for (int i = 0; i < 7; ++i) {
+        for (i = 0; i < 7; ++i) {
             if (seven_cards_loc[i].value == 14) {
                 seven_cards_loc[i].value = 1;
                 break;
@@ -247,62 +258,33 @@ struct card* straight(struct card* seven_cards) {
         }
     }
 
-    int j = 0;
-    for (int i = 0; i < 7; ++i){
-        for (j = 0; j < 7; ++j){
-            if (seven_cards_loc[i].value == seven_cards_loc[j].value && i!=j){
-                seven_cards_loc[j].value = -1;
-            }
+    i,j = 0;
+    for (i = 0; i < 6; ++i){
+        if (seven_cards_loc[i].value == seven_cards_loc[i+1].value){
+            seven_cards_loc[i+1].value = 16;
         }
     }
 
     qsort(seven_cards_loc, 7, sizeof(struct card), compare_cards);
 
-    struct card* straight = malloc(5*sizeof(struct card));
-    for (int i = 0; i < 5; ++i){
-        straight[i].value = -1;//if it not straight
-        straight[i].suit = 'n';
-    }
-
-    int k = 1;
-
-    for (int i = 0; i < 7; ++i){
-        for (int j = 0; j < 7; ++j){
-            if (seven_cards_loc[i].value+1 == seven_cards_loc[j].value){
-                ++k;
-                if(k==2){
-                    straight[0] = seven_cards_loc[i];
-                    straight[1] = seven_cards_loc[j];
-                    j=7;
-                }
-                else if(k==3){
-                    straight[2] = seven_cards_loc[j];
-                    j=7;
-                }
-                else if(k==4){
-                    straight[3] = seven_cards_loc[j];
-                    j=7;
-                }
-                else if(k==5){
-                    straight[4] = seven_cards_loc[j];
-                    return straight;
-                }
-            }
-            else if (j==6 && seven_cards_loc[i].value+1 != seven_cards_loc[j].value)
-            {
-                k=1;
-                for(int l = 0; l < 5; ++l){
-                    straight[l].value = -1;//if it not straight
-                    straight[l].suit = 'n';
-                }
+    i,j = 0;
+    for (i = 0; i < 4; ++i){
+        if (seven_cards_loc[i].value+1 == seven_cards_loc[i+1].value && seven_cards_loc[i].value+2 == seven_cards_loc[i+2].value
+            && seven_cards_loc[i].value+3 == seven_cards_loc[i+3].value&& seven_cards_loc[i].value+4 == seven_cards_loc[i+4].value
+            && seven_cards_loc[i].value+5 == seven_cards_loc[i+5].value&& seven_cards_loc[i].value > straight[0].value ){
+            straight[0] = seven_cards_loc[i];
+            straight[1] = seven_cards_loc[i+1];
+            straight[2] = seven_cards_loc[i+2];
+            straight[3] = seven_cards_loc[i+3];
+            straight[4] = seven_cards_loc[i+4];
+            if (i >= 3){
+                free(seven_cards_loc);
+                return straight;
             }
         }
     }
-    for(int l = 0; l < 5; ++l){
-        straight[l].value = -1;//if it not straight
-        straight[l].suit = 'n';
-    }
 
+    free(seven_cards_loc);
     return straight;
 }
 
@@ -313,33 +295,7 @@ struct card* full(struct card* seven_cards){
     struct card* full = malloc(5 * sizeof(struct card));
     struct card* four = malloc(4 * sizeof(struct card));
     for (int i = 0; i < 7; ++i){
-        for (int j = 0; j < 7; ++j){
-            if (j!=i && seven_cards[i].value == seven_cards[j].value){
-                for (int k = 0; k < 7; ++k){
-                    if(k!=j && k!=i && seven_cards[k].value == seven_cards[i].value){
-                        full[0] = seven_cards[i];
-                        full[1] = seven_cards[j];
-                        full[2] = seven_cards[k];
-                        seven_cards[i].value = 15;
-                        seven_cards[j].value = 16;
-                        seven_cards[k].value = 17;
-                        qsort(seven_cards, 7, sizeof(struct card), compare_cards);
-                        for (int i = 0; i < 4; ++i){
-                            four[i] = seven_cards[i];
-                        }
-                        for (int i = 0; i < 4; ++i){
-                            for (int j = 0; j < 4; ++j){
-                                if (j!=i && four[i].value == four[j].value){
-                                    full[3] = four[i];
-                                    full[4] = four[j];
-                                    return full;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        
     }
     for(int i = 0; i < 5; ++i){
         full[i].value = -1;//if it not a full
@@ -399,13 +355,13 @@ int main(int argc, char const *argv[]){
 
     qsort(visibles_cards, 5, sizeof(struct card), compare_cards);
 
-    /*visibles_cards[0].value = 2;
+    /*visibles_cards[0].value = 14;
     visibles_cards[1].value = 2;
-    visibles_cards[2].value = 2;
-    visibles_cards[3].value = 3;
-    visibles_cards[4].value = 3;
-    players[0].hand[0].value = 3;
-    players[0].hand[1].value = 3;
+    visibles_cards[2].value = 3;
+    visibles_cards[3].value = 4;
+    visibles_cards[4].value = 5;
+    players[0].hand[0].value = 6;
+    players[0].hand[1].value = 7;
     visibles_cards[0].suit = 'A';
     visibles_cards[1].suit = 'B';
     visibles_cards[2].suit = 'C';
