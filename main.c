@@ -126,7 +126,7 @@ struct card* two_pair(struct card* seven_cards){
     struct card* first_pair_check = malloc(2 * sizeof(struct card));
     struct card* five_cards = malloc(5*sizeof(struct card));
 
-    first_pair_check = pair_checker(seven_cards);
+    first_pair_check = pair(seven_cards);
 
     pairs[0] = first_pair_check[0];
     pairs[1] = first_pair_check[1];
