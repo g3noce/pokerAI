@@ -57,6 +57,8 @@ struct card take_alt_card(struct card* deck52){
     srand(seed);
     struct card selected_card;
     int alt_num = rand() % 52;
+    if(alt_num < 0) 
+        alt_num = alt_num * -1;
     while(deck52[alt_num].already_taken == 1){
         alt_num = rand() % 52;
     }
@@ -98,21 +100,17 @@ struct player_attrib* set_hand_cards(struct player_attrib* positions, struct car
 
 struct card* pair_checker(struct card* seven_cards){
     struct card* pair = malloc(2 * sizeof(struct card));
-    for (int i = 0; i < 2; ++i){
+    int i = 0;
+    for (i = 0; i < 2; ++i){
         pair[i].value = -1;//if it not pair
         pair[i].suit = 'n';
     }
-    int i=0;
-    int j=0;
 
-    for (int i = 0; i < 7; ){
-        if (j!=i && j>i && seven_cards[i].value == seven_cards[i+1].value && seven_cards[i].value > pair[0].value ){
+    for (i = 0; i < 6; ++i){
+        if (seven_cards[i].value == seven_cards[i+1].value && seven_cards[i].value > pair[0].value ){
             pair[0] = seven_cards[i];
-            pair[1] = seven_cards[j];
-        }
-        else{
-            i=j;
-            j=i+1;
+            pair[1] = seven_cards[i+1];
+            if (i >= 6) return pair;
         }
     }
     return pair;
@@ -120,59 +118,58 @@ struct card* pair_checker(struct card* seven_cards){
 
 struct card* two_pair_checker(struct card* seven_cards){
     struct card* pairs = malloc(4 * sizeof(struct card));
-    for (int i = 0; i < 4; ++i){
+    int i,j = 0;
+    for (i = 0; i < 4; ++i){
         pairs[i].value = -1;
         pairs[i].suit = 'n';
     }
-
     struct card* first_pair_check = malloc(2 * sizeof(struct card));
+    struct card* five_cards = malloc(5*sizeof(struct card));
+
     first_pair_check = pair_checker(seven_cards);
-    
-    for (int i = 0; i < 2; ++i){
-        pairs[i] = first_pair_check[i];
+
+    pairs[0] = first_pair_check[0];
+    pairs[1] = first_pair_check[1];
+
+    free(first_pair_check);
+
+    for (i = 0; i < 7; ++i){
+        if(seven_cards[i].value == pairs[0].value) i+=2;
+        five_cards[j] = seven_cards[i];
+        j++;
     }
 
-    for (int i = 0; i < 7; ++i){
-        for (int j = 0; j < 7; ++j){
-            if (j!=i && seven_cards[i].value == seven_cards[j].value && seven_cards[i].value > pairs[2].value){
-                if (seven_cards[i].value != first_pair_check[0].value)
-                {
-                    pairs[2] = seven_cards[i];
-                    pairs[3] = seven_cards[j];
-                }
-                else if (seven_cards[i].value == first_pair_check[0].value
-                && seven_cards[i].suit != first_pair_check[0].suit
-                && seven_cards[i].suit != first_pair_check[1].suit
-                && seven_cards[j].suit != first_pair_check[0].suit
-                && seven_cards[j].suit != first_pair_check[1].suit)
-                {   
-                    pairs[2] = seven_cards[i];
-                    pairs[3] = seven_cards[j];
-                }
+    i = 0;
+    j = 0;
+    for (i = 0; i < 4; ++i){
+        if (five_cards[i].value == five_cards[i+1].value && five_cards[i].value > pairs[2].value ){
+            pairs[2] = five_cards[i];
+            pairs[3] = five_cards[i+1];
+            if (i >= 4){
+                free(five_cards);
+                return pairs;
             }
         }
     }
+
+    free(five_cards);
     return pairs;
 }
 
 struct card* three_of_a_kind(struct card* seven_cards){
     struct card* three;
     three = malloc(3 * sizeof(struct card));
-    for (int i = 0; i < 3; ++i){
+    int i = 0;
+    for (i = 0; i < 3; ++i){
         three[i].value = -1;//if it not three
         three[i].suit = 'n';
     }
-    for (int i = 0; i < 7; ++i){
-        for (int j = 0; j < 7; ++j){
-            if (j!=i && seven_cards[i].value == seven_cards[j].value){
-                for (int k = 0; k < 7; ++k){
-                    if(k!=j && k!=i && seven_cards[k].value == seven_cards[i].value && seven_cards[i].value > three[0].value){                        
-                        three[0] = seven_cards[i];
-                        three[1] = seven_cards[j];
-                        three[2] = seven_cards[k];
-                    }
-                }
-            }
+    for (i = 0; i < 5; ++i){
+        if (seven_cards[i].value == seven_cards[i+1].value && seven_cards[i].value == seven_cards[i+2].value && seven_cards[i].value > three[0].value ){
+            three[0] = seven_cards[i];
+            three[1] = seven_cards[i+1];
+            three[2] = seven_cards[i+2];
+            if (i >= 4) return three;
         }
     }
     return three;
@@ -181,27 +178,19 @@ struct card* three_of_a_kind(struct card* seven_cards){
 struct card* square(struct card* seven_cards){
     struct card* square;
     square = malloc(4 * sizeof(struct card));
-    for (int i = 0; i < 4; ++i){
+    int i = 0;
+    for (i = 0; i < 4; ++i){
         square[i].value = -1;//if it not square
         square[i].suit = 'n';
     }
-    for (int i = 0; i < 7; ++i){
-        for (int j = 0; j < 7; ++j){
-            if (j!=i && seven_cards[i].value == seven_cards[j].value){
-                for (int k = 0; k < 7; ++k){
-                    if(k!=j && k!=i && seven_cards[k].value == seven_cards[i].value){
-                        for (int l = 0; l < 7; ++l){
-                            if(l!=k && l!=j && l!=i && seven_cards[l].value == seven_cards[i].value){
-                                square[0] = seven_cards[i];
-                                square[1] = seven_cards[j];
-                                square[2] = seven_cards[k];
-                                square[3] = seven_cards[l];
-                                return square;
-                            }
-                        }
-                    }
-                }
-            }
+    for (i = 0; i < 4; ++i){
+        if (seven_cards[i].value == seven_cards[i+1].value && seven_cards[i].value == seven_cards[i+2].value 
+            && seven_cards[i].value == seven_cards[i+3].value && seven_cards[i].value > square[0].value ){
+            square[0] = seven_cards[i];
+            square[1] = seven_cards[i+1];
+            square[2] = seven_cards[i+2];
+            square[3] = seven_cards[i+3];
+            if (i >= 3) return square;
         }
     }
     return square;
@@ -391,7 +380,6 @@ struct card* find_best_combo(struct card* seven_cards) {
 }
 
 int main(int argc, char const *argv[]){
-
     double current_time_ns = time_ns();
     time_t t;
     for (int i = 0; i < t % 10000000; ++i)
@@ -408,22 +396,23 @@ int main(int argc, char const *argv[]){
     for (int i = 0; i < 5; ++i){
         visibles_cards[i] = take_alt_card(deck52);
     }
-    
+
+    qsort(visibles_cards, 5, sizeof(struct card), compare_cards);
 
     /*visibles_cards[0].value = 2;
     visibles_cards[1].value = 2;
-    visibles_cards[2].value = 3;
+    visibles_cards[2].value = 2;
     visibles_cards[3].value = 3;
     visibles_cards[4].value = 3;
-    players[0].hand[0].value = 5;
-    players[0].hand[1].value = 7;
+    players[0].hand[0].value = 3;
+    players[0].hand[1].value = 3;
     visibles_cards[0].suit = 'A';
     visibles_cards[1].suit = 'B';
     visibles_cards[2].suit = 'C';
     visibles_cards[3].suit = 'D';
     visibles_cards[4].suit = 'E';
     players[0].hand[0].suit = 'F';
-    players[0].hand[1].suit = 'H';*/
+    players[0].hand[1].suit = 'G';*/
 
     struct card* seven_cards = malloc(7 * sizeof(struct card));
 
@@ -468,7 +457,6 @@ int main(int argc, char const *argv[]){
     for (int i = 0; i < 8; ++i){
         printf("player %d ; pos %d ; card1 %d%c card2 %d%c ; tokens player:%f\n",players[i].player_num, players[i].position, players[i].hand[0].value, players[i].hand[0].suit, players[i].hand[1].value, players[i].hand[1].suit, players[i].tokens);
     }
-
 
     free(flush_combo);
     free(three_of_a_kind_combo);
