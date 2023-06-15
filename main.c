@@ -8,8 +8,8 @@ struct card{
     int already_taken;
 };
 
-struct player_attrib{
-    int player_num;
+struct player_def{
+    int player_id;
     int position;
     struct card hand[2];
     float tokens;
@@ -46,21 +46,7 @@ struct card* create_deck(){
     return deck;
 }
 
-double time_ns(){
-    static struct timespec start_time = {0, 0};
-    struct timespec current_time;
-    clock_gettime(CLOCK_MONOTONIC, &current_time);
-    double elapsed_ns = (double)(current_time.tv_sec - start_time.tv_sec) * 1000000000 + (current_time.tv_nsec - start_time.tv_nsec);
-    if (elapsed_ns >= 50000000000000) {
-        start_time = current_time;
-        elapsed_ns = 0;
-    }
-    return elapsed_ns;
-}
-
 struct card take_alt_card(struct card* deck52){
-    double seed = time_ns();
-    srand(seed);
     struct card selected_card;
     int alt_num = rand() % 52;
     if(alt_num < 0) 
@@ -73,32 +59,27 @@ struct card take_alt_card(struct card* deck52){
     return selected_card;
 }
 
-struct player_attrib* set_money_player(struct player_attrib* num_player){
-    for (int i = 0; i < 8; ++i){
-        num_player[i].tokens = 10000.0;
+struct player_def* set_tokens_player(struct player_def* players, int nplayer){
+    for (int i = 0; i < nplayer; ++i){
+        players[i].tokens = 10000.0;
     }
-    return num_player;
+    return players;
 }
 
-struct player_attrib* utg_positions(struct player_attrib* positions, int n){
-    if(n > 7 | n < 0)
-        return 0;
-    int player_num = n;
-    int pos[] = { 0 , 1 , 2 , 3 , 4 , 5 , 6 , 7}; // "Under the gun", "Middle position", "Middle position", "Middle position", "Cut-off", "Button", "Small blind", "Big blind"
+struct player_def* utg_positions(struct player_def* positions, int utg_positions_in_table,int nplayer){
+    utg_positions_in_table = utg_positions_in_table % nplayer;
 
-    for (int i = 0; i < 8; i++) {
-        positions[i].player_num = player_num;
-        positions[i].position = pos[i];
-        player_num = (player_num + 1) % 8;
+    for (int i = 0; i < nplayer; i++) {
+        positions[i].player_id = i;
+        positions[i].position = utg_positions_in_table;
+        utg_positions_in_table = (utg_positions_in_table + 1) % nplayer;
     }
     return positions;
 }
 
-struct player_attrib* set_hand_cards(struct player_attrib* positions, struct card* deck52){
-    for (int i = 0; i < 8; ++i){
-
+struct player_def* set_hand_cards(struct player_def* positions, struct card* deck52, int nplayer){
+    for (int i = 0; i < nplayer; ++i){
         positions[i].hand[0] = take_alt_card(deck52);
-
         positions[i].hand[1] = take_alt_card(deck52);
     }
     return positions;
@@ -405,47 +386,115 @@ struct card* straight_flush(struct card* seven_cards){
 }
 
 struct card* find_best_combo(struct card* seven_cards) {
-    struct card* combo = NULL;
+    struct card* combo = malloc(2 * sizeof(struct card));
 
     // Check for different combinations in descending order of hand rankings
-    combo = straight_flush(seven_cards);
-    if(combo != NULL) return combo;
+    struct card* straight_flush_combo = malloc(5 * sizeof(struct card));
+    straight_flush_combo = straight_flush(seven_cards);
+    if(straight_flush_combo != NULL){
+        printf("straight_flush\n" );
+        combo[0].value = 8;
+        combo[1].value = straight_flush_combo[4].value;
+        combo[1].suit = straight_flush_combo[4].suit;
+        free(straight_flush_combo);
+        return combo;
+    }
+    free(straight_flush_combo);
 
-    combo = square(seven_cards);
-    if(combo != NULL) return combo;
+    struct card* square_combo = malloc(4 * sizeof(struct card));
+    square_combo = square(seven_cards);
+    if(square_combo != NULL){
+        printf("square\n" );
+        combo[0].value = 7;
+        combo[1].value = square_combo[3].value;
+        combo[1].suit = square_combo[3].suit;
+        free(square_combo);
+        return combo;
+    }
+    free(square_combo);
 
-    combo = full(seven_cards);
-    if(combo != NULL) return combo;
+    struct card* full_combo = malloc(5 * sizeof(struct card));
+    full_combo = full(seven_cards);
+    if(full_combo != NULL){
+        combo = realloc(combo,3 * sizeof(struct card));
+        combo[0].value = 6;
+        combo[1].value = full_combo[2].value;
+        combo[1].suit = full_combo[2].suit;
+        combo[2].value = full_combo[4].value;
+        combo[2].suit = full_combo[4].suit;
+        free(full_combo);
+        return combo;
+    }
+    free(full_combo);
 
-    combo = flush(seven_cards);
-    if(combo != NULL) return combo;
+    struct card* flush_combo = malloc(5 * sizeof(struct card));
+    flush_combo = flush(seven_cards);
+    if(flush_combo != NULL){
+        combo[0].value = 5;
+        combo[1].value = flush_combo[4].value;
+        combo[1].suit = flush_combo[4].suit;
+        free(flush_combo);
+        return combo;
+    }
+    free(flush_combo);
 
-    combo = straight(seven_cards);
-    if(combo != NULL) return combo;
+    struct card* straight_combo = malloc(5 * sizeof(struct card));
+    straight_combo = straight(seven_cards);
+    if(straight_combo != NULL){
+        combo[0].value = 4;
+        combo[1].value = straight_combo[4].value;
+        combo[1].suit = straight_combo[4].suit;
+        free(straight_combo);
+        return combo;
+    }
+    free(straight_combo);
 
-    combo = three_of_a_kind(seven_cards);
-    if(combo != NULL) return combo;
+    struct card* three_of_a_kind_combo = malloc(3 * sizeof(struct card));
+    three_of_a_kind_combo = three_of_a_kind(seven_cards);
+    if(three_of_a_kind_combo != NULL){
+        combo[0].value = 3;
+        combo[1].value = three_of_a_kind_combo[2].value;
+        combo[1].suit = three_of_a_kind_combo[2].suit;
+        free(three_of_a_kind_combo);
+        return combo;
+    }
+    free(three_of_a_kind_combo);
 
-    combo = two_pair(seven_cards);
-    if(combo != NULL) return combo;
+    struct card* two_pair_combo = malloc(3 * sizeof(struct card));
+    two_pair_combo = two_pair(seven_cards);
+    if(two_pair_combo != NULL){
+        combo[0].value = 2;
+        combo[1].value = two_pair_combo[0].value;
+        combo[1].suit = two_pair_combo[0].suit;
+        free(two_pair_combo);
+        return combo;
+    }
+    free(two_pair_combo);
 
-    combo = pair(seven_cards);
-    if(combo != NULL) return combo;
+    struct card* pair_combo = malloc(3 * sizeof(struct card));
+    pair_combo = pair(seven_cards);
+    if(pair_combo != NULL){
+        combo[0].value = 1;
+        combo[1].value = pair_combo[0].value;
+        combo[1].suit = pair_combo[0].suit;
+        free(pair_combo);
+        return combo;
+    }
+    free(pair_combo);
 
     return NULL;  // No valid combination found
 }
 
 int main(int argc, char const *argv[]){
-    double current_time_ns = time_ns();
-    time_t t;
+    srand((unsigned int) time(NULL));
+    int nplayer = 6;
     int i = 0;
-    for (i = 0; i < t % 10000000; ++i) i=i;
     struct card* deck52 = malloc(52 * sizeof(struct card));
-    struct player_attrib* players = malloc(8 * sizeof(struct player_attrib));
+    struct player_def* players = malloc(nplayer * sizeof(struct player_def));
     deck52 = create_deck();
-    players = set_money_player(players);
-    players = utg_positions(players, 0);
-    players = set_hand_cards(players, deck52);
+    players = utg_positions(players, 0, nplayer);
+    players = set_hand_cards(players, deck52, nplayer);
+    players = set_tokens_player(players, nplayer);
 
     struct card* visibles_cards = malloc(5 * sizeof(struct card));
     
@@ -479,103 +528,28 @@ int main(int argc, char const *argv[]){
     }
 
     qsort(seven_cards, 7, sizeof(struct card),compare_cards_value);
-
-    struct card* pair_combo = malloc(2 * sizeof(struct card));
-    struct card* two_pair_combo = malloc(2 * sizeof(struct card));
-    struct card* three_of_a_kind_combo = malloc(3 * sizeof(struct card));
-    struct card* square_combo = malloc(4 * sizeof(struct card));
-    struct card* flush_combo = malloc(5 * sizeof(struct card));
-    struct card* straight_combo = malloc(5 * sizeof(struct card));
-    struct card* full_combo = malloc(5 * sizeof(struct card));
-    struct card* straight_flush_combo = malloc(5 * sizeof(struct card));
-
-    pair_combo = pair(seven_cards);
-    two_pair_combo = two_pair(seven_cards);
-    three_of_a_kind_combo = three_of_a_kind(seven_cards);
-    square_combo = square(seven_cards);
-    flush_combo = flush(seven_cards);
-    straight_combo = straight(seven_cards);
-    full_combo = full(seven_cards);
-    straight_flush_combo = straight_flush(seven_cards);
-
+    
     for (i = 0; i < 7; ++i)
         printf("%d%c:", seven_cards[i].value, seven_cards[i].suit);
     printf("\n");
 
-    if (pair_combo != NULL) {
-        printf("first pair      : %d%c%c\n",pair_combo[0].value, pair_combo[0].suit, pair_combo[1].suit);
-        free(pair_combo);
-    } else {
-        printf("No pair found.\n");
-    }
+    struct card* best_combo = malloc(3 * sizeof(struct card));
 
-    if (two_pair_combo != NULL) {
-        printf("scd pair        : %d%c%c\n",two_pair_combo[0].value, two_pair_combo[0].suit, two_pair_combo[1].suit);
-        free(two_pair_combo);
-    } else {
-        printf("No scd pair found.\n");
-    }
+    best_combo = find_best_combo(seven_cards);
 
-    if (three_of_a_kind_combo != NULL) {
-        printf("three of a kind : %d%c%c%c\n",three_of_a_kind_combo[0].value,three_of_a_kind_combo[0].suit,three_of_a_kind_combo[1].suit,three_of_a_kind_combo[2].suit);
-        free(three_of_a_kind_combo);
-    } else {
-        printf("No three of a kind found.\n");
-    }
-    
-    if (square_combo != NULL) {
-        printf("square          : %d%c%c%c%c\n",square_combo[0].value,square_combo[0].suit,square_combo[1].suit,square_combo[2].suit,square_combo[3].suit);
-        free(square_combo);
-    } else {
-        printf("No square found.\n");
-    }
+    if (best_combo == NULL && players[0].hand[1].value < players[0].hand[0].value)
+        printf("high card : %d%c\n\n",players[0].hand[0].value,players[0].hand[0].suit);
+    else if(best_combo == NULL && players[0].hand[0].value < players[0].hand[1].value)
+        printf("high card : %d%c\n\n",players[0].hand[1].value,players[0].hand[1].suit);    
+    else if(best_combo[0].value == 6)
+        printf("score combo : %d\nthree kind:%d%c\npair: %d%c\n",best_combo[0].value,best_combo[1].value,best_combo[1].suit,best_combo[2].value,best_combo[2].suit);
+    else
+        printf("score combo : %d\nbest of combo:%d%c\n",best_combo[0].value,best_combo[1].value,best_combo[1].suit);
 
-    if (flush_combo != NULL) {
-        printf("flush           : %d:%d:%d:%d:%d/%c\n",flush_combo[0].value, flush_combo[1].value, flush_combo[2].value, flush_combo[3].value, flush_combo[4].value, flush_combo[0].suit);
-        free(flush_combo);
-    } else {
-        printf("No flush found.\n");
-    }
+    for (i = 0; i < nplayer; ++i)
+        printf("player %d ; pos %d ; card1 %d%c card2 %d%c ; tokens player:%f\n",players[i].player_id, players[i].position, players[i].hand[0].value, players[i].hand[0].suit, players[i].hand[1].value, players[i].hand[1].suit, players[i].tokens);
 
-    if (straight_combo != NULL) {
-        printf("straight        : ");
-        for (i = 0; i < 5; ++i)
-            printf("%d%c:", straight_combo[i].value, straight_combo[i].suit);
-        printf("\n");
-        free(straight_combo);
-    } else {
-        printf("No straight found.\n");
-    }
-
-    if (full_combo != NULL) {
-        printf("full            : ");
-        for (i = 0; i < 5; ++i)
-            printf("%d%c:", full_combo[i].value, full_combo[i].suit);
-        printf("\n");
-        free(full_combo);
-    } else {
-        printf("No full found.\n");
-    }
-
-    if (straight_flush_combo != NULL) {
-        printf("straight flush  : ");
-        for (i = 0; i < 5; ++i)
-            printf("%d%c:", straight_flush_combo[i].value, straight_flush_combo[i].suit);
-        printf("\n");
-        free(straight_flush_combo);
-    } else {
-        printf("No straight flush found.\n");
-    }
-    
-    for (i = 0; i < 8; ++i)
-        printf("player %d ; pos %d ; card1 %d%c card2 %d%c ; tokens player:%f\n",players[i].player_num, players[i].position, players[i].hand[0].value, players[i].hand[0].suit, players[i].hand[1].value, players[i].hand[1].suit, players[i].tokens);
-
-    free(straight_flush_combo);
-    free(full_combo);
-    free(straight_combo);
-    free(three_of_a_kind_combo);
-    free(square_combo);
-    free(two_pair_combo);
+    free(best_combo);
     free(seven_cards);
     free(visibles_cards);
     free(players);
