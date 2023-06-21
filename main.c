@@ -29,6 +29,9 @@ int compare_cards_suit(const void *a, const void *b) {
 
 struct card* create_deck(){
     struct card* deck = (struct card*)malloc(52 * sizeof(struct card));
+    if(!deck){
+        return NULL;
+    }
 
     // initialize the cards
     for (int i = 0; i < 52; i++) {
@@ -59,40 +62,21 @@ struct card take_alt_card(struct card* deck52){
     return selected_card;
 }
 
-struct player_def* set_tokens_player(struct player_def* players, int nplayer){
-    for (int i = 0; i < nplayer; ++i){
-        players[i].tokens = 10000;
-    }
-    return players;
-}
-
-struct player_def* utg_positions(struct player_def* positions, int utg_positions_in_table,int nplayer){
-    utg_positions_in_table = utg_positions_in_table % nplayer;
-
-    for (int i = 0; i < nplayer; i++) {
-        positions[i].player_id = i;
-        positions[i].position = utg_positions_in_table;
-        utg_positions_in_table = (utg_positions_in_table + 1) % nplayer;
-    }
-    return positions;
-}
-
-struct player_def* set_hand_cards(struct player_def* positions, struct card* deck52, int nplayer){
-    for (int i = 0; i < nplayer; ++i){
-        positions[i].hand[0] = take_alt_card(deck52);
-        positions[i].hand[1] = take_alt_card(deck52);
-    }
-    return positions;
-}
-
 struct card* pair(struct card* all_cards){
     struct card* bestof = (struct card*)malloc(5 * sizeof(struct card));
+    if(!bestof){
+        return NULL;
+    }
     for (int i = 0; i < 5; i++){
         bestof[i].value = -1;
         bestof[i].suit = 'n';    
     }
     
     struct card* all_cards_loc = (struct card*)malloc(7 * sizeof(struct card));
+    if(!all_cards_loc){
+        free(bestof);
+        return NULL;
+    }
     for (int i = 0; i < 7; ++i) all_cards_loc[i] = all_cards[i];
 
     int found = 0;
@@ -127,16 +111,27 @@ struct card* pair(struct card* all_cards){
 
 struct card* two_pair(struct card* all_cards){
     struct card* bestof = (struct card*)malloc(5 * sizeof(struct card));
+    if(!bestof){
+        return NULL;
+    }
     for (int i = 0; i < 5; i++){
         bestof[i].value = -1;
         bestof[i].suit = 'n';    
     }
 
     struct card* all_cards_loc = (struct card*)malloc(7 * sizeof(struct card));
+    if(!all_cards_loc){
+        free(bestof);
+        return NULL;
+    }
     for (int i = 0; i < 7; ++i) all_cards_loc[i] = all_cards[i];
 
-    struct card* first_pair_check = (struct card*)malloc(5 * sizeof(struct card));
-    first_pair_check = pair(all_cards_loc);
+    struct card* first_pair_check = pair(all_cards_loc);
+    if(!first_pair_check){
+        free(all_cards_loc);
+        free(bestof);
+        return NULL;
+    }
 
     if (first_pair_check == NULL) {
         free(first_pair_check);
@@ -151,6 +146,11 @@ struct card* two_pair(struct card* all_cards){
     free(first_pair_check);
 
     struct card* five_cards = (struct card*)malloc(5 * sizeof(struct card));
+    if(!five_cards){
+        free(all_cards_loc);
+        free(bestof);
+        return NULL;
+    }
 
     int j = 0;
     for (int i = 0; i < 7; ++i) {
@@ -191,6 +191,9 @@ struct card* two_pair(struct card* all_cards){
 
 struct card* three_of_a_kind(struct card* all_cards){
     struct card* bestof = (struct card*)malloc(5 * sizeof(struct card));
+    if(!bestof){
+        return NULL;
+    }
     
     for (int i = 0; i < 5; i++)
     {
@@ -199,6 +202,10 @@ struct card* three_of_a_kind(struct card* all_cards){
     }
 
     struct card* all_cards_loc = (struct card*)malloc(7 * sizeof(struct card));
+    if(!all_cards_loc){
+        free(bestof);
+        return NULL;
+    }
     for (int i = 0; i < 7; ++i) all_cards_loc[i] = all_cards[i];
 
     int found = 0;
@@ -232,8 +239,15 @@ struct card* three_of_a_kind(struct card* all_cards){
 
 struct card* straight(struct card* all_cards) {
     struct card* all_cards_loc = (struct card*)malloc(7 * sizeof(struct card));
+    if(!all_cards_loc){
+        return NULL;
+    }
     for (int i = 0; i < 7; ++i) all_cards_loc[i] = all_cards[i];
     struct card* straight = (struct card*)malloc(5*sizeof(struct card));
+    if(!straight){
+        free(all_cards_loc);
+        return NULL;
+    }
     int found = 0;
 
     for (int i = 0; i < 5; ++i){
@@ -293,7 +307,14 @@ struct card* straight(struct card* all_cards) {
 
 struct card* flush(struct card* all_cards){
     struct card* flush = (struct card*)malloc(5 * sizeof(struct card));
+    if(!flush){
+        return NULL;
+    }
     struct card* all_cards_loc = (struct card*)malloc(7 * sizeof(struct card));
+    if(!all_cards_loc){
+        free(flush);
+        return NULL;
+    }
     int flushCount = 0;
     for (int i = 0; i < 7; ++i) all_cards_loc[i] = all_cards[i];
     for (int i = 0; i < 5; ++i){
@@ -326,15 +347,20 @@ struct card* flush(struct card* all_cards){
 
 struct card* full(struct card* all_cards){
     struct card* full = (struct card*)malloc(5 * sizeof(struct card));
+    if(!full){
+        return NULL;
+    }
     int found = 0;
     for (int i = 0; i < 5; ++i){
         full[i].value = -1;
         full[i].suit = 'n';
     }
 
-    struct card* three_of_a_kind_check = (struct card*)malloc(3 * sizeof(struct card));
-
-    three_of_a_kind_check = three_of_a_kind(all_cards);
+    struct card* three_of_a_kind_check = three_of_a_kind(all_cards);
+    if(!three_of_a_kind_check){
+        free(full);
+        return NULL;
+    }
 
     if (three_of_a_kind_check == NULL) {
         free(three_of_a_kind_check);
@@ -349,6 +375,10 @@ struct card* full(struct card* all_cards){
     free(three_of_a_kind_check);
 
     struct card* four_cards = (struct card*)malloc(4 * sizeof(struct card));
+    if(!four_cards){
+        free(full);
+        return NULL;
+    }
 
     int j = 0;
     for (int i = 0; i < 7; ++i){
@@ -379,12 +409,19 @@ struct card* full(struct card* all_cards){
 
 struct card* square(struct card* all_cards){
     struct card* bestof = (struct card*)malloc(5 * sizeof(struct card));
+    if(!bestof){
+        return NULL;
+    }
     for (int i = 0; i < 5; ++i){
         bestof[i].value = -1;//if it not square
         bestof[i].suit = 'n';
     }
 
     struct card* all_cards_loc = (struct card*)malloc(7 * sizeof(struct card));
+    if(!all_cards_loc){
+        free(bestof);
+        return NULL;
+    }
     for (int i = 0; i < 7; ++i) all_cards_loc[i] = all_cards[i];
 
     int j = 0;
@@ -424,10 +461,8 @@ struct card* square(struct card* all_cards){
 }
 
 struct card* straight_flush(struct card* all_cards){
-    struct card* straight_flush = (struct card*)malloc(5 * sizeof(struct card));
-    straight_flush = straight(all_cards);
-    if (straight_flush == NULL) {
-        free(straight_flush);
+    struct card* straight_flush = straight(all_cards);
+    if(!straight_flush){
         return NULL;
     }
     
@@ -447,106 +482,114 @@ struct card* straight_flush(struct card* all_cards){
 
 struct card* find_best_combo(struct card* all_cards) {
     struct card* combo = (struct card*)malloc(6 * sizeof(struct card));
-    struct card* bestof = (struct card*)malloc(5 * sizeof(struct card));
+    if(!combo){
+        return NULL;
+    }
 
     // Check for different combinations in descending order of hand rankings
-    bestof = straight_flush(all_cards);
-    if(bestof != NULL){
+    struct card* bestof_straight_flush = straight_flush(all_cards);
+    if(bestof_straight_flush != NULL){
         combo[0].value = 8;
         for (int i = 0; i < 5; i++)
         {
-            combo[i+1].value = bestof[i].value;
-            combo[i+1].suit = bestof[i].suit;
+            combo[i+1].value = bestof_straight_flush[i].value;
+            combo[i+1].suit = bestof_straight_flush[i].suit;
         }
-        free(bestof);
+        free(bestof_straight_flush);
         return combo;
     }
+    free(bestof_straight_flush);
 
-    bestof = square(all_cards);
-    if(bestof != NULL){
+    struct card* bestof_square = square(all_cards);
+    if(bestof_square != NULL){
         combo[0].value = 7;
         for (int i = 0; i < 5; i++)
         {
-            combo[i+1].value = bestof[i].value;
-            combo[i+1].suit = bestof[i].suit;
+            combo[i+1].value = bestof_square[i].value;
+            combo[i+1].suit = bestof_square[i].suit;
         }
-        free(bestof);
+        free(bestof_square);
         return combo;
     }
+    free(bestof_square);
 
-    bestof = full(all_cards);
-    if(bestof != NULL){
+    struct card* bestof_full = full(all_cards);
+    if(bestof_full != NULL){
         combo[0].value = 6;
         for (int i = 0; i < 5; i++)
         {
-            combo[i+1].value = bestof[i].value;
-            combo[i+1].suit = bestof[i].suit;
+            combo[i+1].value = bestof_full[i].value;
+            combo[i+1].suit = bestof_full[i].suit;
         }
-        free(bestof);
+        free(bestof_full);
         return combo;
     }
+    free(bestof_full);
 
-    bestof = flush(all_cards);
-    if(bestof != NULL){
+    struct card* bestof_flush = flush(all_cards);
+    if(bestof_flush != NULL){
         combo[0].value = 5;
         for (int i = 0; i < 5; i++)
         {
-            combo[i+1].value = bestof[i].value;
-            combo[i+1].suit = bestof[i].suit;
+            combo[i+1].value = bestof_flush[i].value;
+            combo[i+1].suit = bestof_flush[i].suit;
         }
-        free(bestof);
+        free(bestof_flush);
         return combo;
     }
+    free(bestof_flush);
 
-    bestof = straight(all_cards);
-    if(bestof != NULL){
+    struct card* bestof_straight = straight(all_cards);
+    if(bestof_straight != NULL){
         combo[0].value = 4;
         for (int i = 0; i < 5; i++)
         {
-            combo[i+1].value = bestof[i].value;
-            combo[i+1].suit = bestof[i].suit;
+            combo[i+1].value = bestof_straight[i].value;
+            combo[i+1].suit = bestof_straight[i].suit;
         }
-        free(bestof);
+        free(bestof_straight);
         return combo;
     }
+    free(bestof_straight);
 
-    bestof = three_of_a_kind(all_cards);
-    if(bestof != NULL){
+    struct card* bestof_three = three_of_a_kind(all_cards);
+    if(bestof_three != NULL){
         combo[0].value = 3;
         for (int i = 0; i < 5; i++)
         {
-            combo[i+1].value = bestof[i].value;
-            combo[i+1].suit = bestof[i].suit;
+            combo[i+1].value = bestof_three[i].value;
+            combo[i+1].suit = bestof_three[i].suit;
         }
-        free(bestof);
+        free(bestof_three);
         return combo;
     }
+    free(bestof_three);
 
-    bestof = two_pair(all_cards);
-    if(bestof != NULL){
+    struct card* bestof_two_pair = two_pair(all_cards);
+    if(bestof_two_pair != NULL){
         combo[0].value = 2;
         for (int i = 0; i < 5; i++)
         {
-            combo[i+1].value = bestof[i].value;
-            combo[i+1].suit = bestof[i].suit;
+            combo[i+1].value = bestof_two_pair[i].value;
+            combo[i+1].suit = bestof_two_pair[i].suit;
         }
-        free(bestof);
+        free(bestof_two_pair);
         return combo;
     }
+    free(bestof_two_pair);
 
-    bestof = pair(all_cards);
-    if(bestof != NULL){
+    struct card* bestof_pair = pair(all_cards);
+    if(bestof_pair != NULL){
         combo[0].value = 1;
         for (int i = 0; i < 5; i++)
         {
-            combo[i+1].value = bestof[i].value;
-            combo[i+1].suit = bestof[i].suit;
+            combo[i+1].value = bestof_pair[i].value;
+            combo[i+1].suit = bestof_pair[i].suit;
         }
-        free(bestof);
+        free(bestof_pair);
         return combo;
     }
-
-    free(bestof);
+    free(bestof_pair);
 
     qsort(all_cards, 7, sizeof(struct card), compare_cards_value);
 
@@ -559,90 +602,90 @@ struct card* find_best_combo(struct card* all_cards) {
     return combo;  // if there is no combo return the 5 highest cards
 }
 
-int main(int argc, char const *argv[]){
+int main(){
     srand((unsigned int) time(NULL));
     int nplayer = 1;
-    struct card* deck52 = (struct card*)malloc(52 * sizeof(struct card));
-    struct player_def* players = (struct player_def*)malloc(nplayer * sizeof(struct player_def));
-    struct card* all_cards = (struct card*)malloc(7 * sizeof(struct card));deck52 = create_deck();
-    //players = utg_positions(players, 0, nplayer);
-    //players = set_hand_cards(players, deck52, nplayer);
-    //players = set_tokens_player(players, nplayer);
-    int score_tot = 0;
-    //for (int i = 0; i < 1000000; i++){
-    for (int i = 0; i < 5; ++i){
-        players[0].hand[0] = take_alt_card(deck52);
-        players[0].hand[1] = take_alt_card(deck52);
-        //player bet
-        if (i == 1){
-            //flop
-            all_cards[0] = take_alt_card(deck52);
-            all_cards[1] = take_alt_card(deck52);
-            all_cards[2] = take_alt_card(deck52);
-        }
-        else if (i == 2){
-            //turn
-            all_cards[3] = take_alt_card(deck52);
-        }
-        else if (i == 3){
-            //river
-            all_cards[4] = take_alt_card(deck52);
-        }
-        else if(i == 4){
-            struct card* best_combo = (struct card*)malloc(6 * sizeof(struct card));
-
-            all_cards[5] = players[0].hand[0];
-            all_cards[6] = players[0].hand[1];
-            
-            qsort(all_cards, 7, sizeof(struct card), compare_cards_value);
-
-            for (int i = 0; i < 7; ++i)
-                printf("%d%c:", all_cards[i].value, all_cards[i].suit);
-            printf("\n");
-
-            best_combo = find_best_combo(all_cards);
-
-            /*if (best_combo == NULL){
-            }
-            else if (best_combo[0].value == 8)
-            {
-                score_tot += 1;
-            }
-            
-            for (int i = 0; i < 52; i++)
-            {
-                deck52[i].already_taken = 0;
-            }*/
-
-            printf("score combo: %d\nbest of combo: ", best_combo[0].value);
-            for (int i = 0; i < 5; i++)
-                printf("%d%c:",best_combo[i+1].value,best_combo[i+1].suit);
-            
-            free(best_combo);
-            //for (int i = 0; i < nplayer; ++i)
-            //    printf("player %d ; pos %d ; card1 %d%c card2 %d%c ; tokens player:%d\n",players[i].player_id, players[i].position, players[i].hand[0].value, players[i].hand[0].suit, players[i].hand[1].value, players[i].hand[1].suit, players[i].tokens);
-        }
+    struct card* deck52 = create_deck();
+    if(!deck52){
+        return -1;
     }
+    struct player_def* players = (struct player_def*)malloc(nplayer * sizeof(struct player_def));
+    if(!players){
+        free(deck52);
+        return -1;
+    }
+    struct card* all_cards = (struct card*)malloc(7 * sizeof(struct card));
+    if(!all_cards){
+        free(players);
+        free(deck52);
+        return -1;
+    }
+    
+    //int score_tot = 0;
+    //for (int i = 0; i < 1000000; i++){
+        for (int i = 0; i < 5; ++i){
+            players[0].hand[0] = take_alt_card(deck52);
+            players[0].hand[1] = take_alt_card(deck52);
+            //player bet
+            if (i == 1){
+                //flop
+                all_cards[0] = take_alt_card(deck52);
+                all_cards[1] = take_alt_card(deck52);
+                all_cards[2] = take_alt_card(deck52);
+            }
+            else if (i == 2){
+                //turn
+                all_cards[3] = take_alt_card(deck52);
+            }
+            else if (i == 3){
+                //river
+                all_cards[4] = take_alt_card(deck52);
+            }
+            else if(i == 4){
+
+                all_cards[5] = players[0].hand[0];
+                all_cards[6] = players[0].hand[1];
+                
+                qsort(all_cards, 7, sizeof(struct card), compare_cards_value);
+
+                for (int i = 0; i < 7; ++i)
+                    printf("%d%c:", all_cards[i].value, all_cards[i].suit);
+                printf("\n");
+
+                
+                struct card* best_combo = find_best_combo(all_cards);
+                if(!best_combo){
+                    free(all_cards);
+                    free(players);
+                    free(deck52);
+                    return -1;
+                }
+
+                /*else if (best_combo[0].value == 8)
+                {
+                    score_tot += 1;
+                }
+                
+                for (int i = 0; i < 52; i++)
+                {
+                    deck52[i].already_taken = 0;
+                }*/
+
+                printf("score combo: %d\nbest of combo: ", best_combo[0].value);
+                for (int i = 0; i < 5; i++)
+                    printf("%d%c:",best_combo[i+1].value,best_combo[i+1].suit);
+                
+                free(best_combo);
+
+                //for (int i = 0; i < nplayer; ++i)
+                //    printf("player %d ; pos %d ; card1 %d%c card2 %d%c ; tokens player:%d\n",players[i].player_id, players[i].position, players[i].hand[0].value, players[i].hand[0].suit, players[i].hand[1].value, players[i].hand[1].suit, players[i].tokens);
+            }
+        }
     //}
-    //printf("%d",score_tot);
+    //printf("\n%d",score_tot);
 
     free(all_cards);
     free(players);
     free(deck52);
     return 0;
 }
-
-    /*visibles_cards[0].value = 6;
-    visibles_cards[1].value = 6;
-    visibles_cards[2].value = 6;
-    visibles_cards[3].value = 2;
-    visibles_cards[4].value = 2;
-    players[0].hand[0].value = 4;
-    players[0].hand[1].value = 4;
-    visibles_cards[0].suit = 'C';
-    visibles_cards[1].suit = 'H';
-    visibles_cards[2].suit = 'P';
-    visibles_cards[3].suit = 'C';
-    visibles_cards[4].suit = 'C';
-    players[0].hand[0].suit = 'T';
-    players[0].hand[1].suit = 'H';*/
