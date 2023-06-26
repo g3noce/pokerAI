@@ -62,12 +62,8 @@ struct player_def* init_players(int nplayers){
 struct card take_alt_card(struct card* deck52){
     struct card selected_card;
     int alt_num = rand() % 52;
-    if(alt_num < 0) 
-        alt_num = alt_num * -1;//abs of alt_num
-    int i = 0;
-    while(deck52[alt_num].already_taken == 1 && i!=52){
-        alt_num = (alt_num + 1) % 52;
-        i += 1;
+    while(deck52[alt_num].already_taken == 1){
+        alt_num = rand() % 52;
     }
     selected_card = deck52[alt_num];
     deck52[alt_num].already_taken = 1;
@@ -452,12 +448,14 @@ struct card* straight_flush(struct card* all_cards){
 }
 
 struct card* find_best_combo(struct card* all_cards) {
-
-    // Check for different combinations in descending order of hand rankings
     struct card* combo = (struct card*)malloc(6 * sizeof(struct card));
     if(!combo){
         return NULL;
     }
+
+    qsort(all_cards, 7, sizeof(struct card), compare_cards_value);
+    
+    // Check for different combinations in descending order of hand rankings
     struct card* bestof_straight_flush = straight_flush(all_cards);
     if(bestof_straight_flush != NULL){
         combo[0].value = 8;
@@ -562,8 +560,6 @@ struct card* find_best_combo(struct card* all_cards) {
     }
     free(bestof_pair);
 
-    qsort(all_cards, 7,sizeof(struct card), compare_cards_value);
-
     combo[0].value = 0;
     combo[1] = all_cards[6];
     combo[2] = all_cards[5];
@@ -576,8 +572,8 @@ struct card* find_best_combo(struct card* all_cards) {
 
 int main(){
     srand((unsigned int) time(NULL));
-    int nplayer = 6;
-    if (nplayer>= 23)
+    int nplayer = 1;
+    if (nplayer >= 23)
         return 1;    
     struct card* deck52 = create_deck();
     if(!deck52){
@@ -619,8 +615,6 @@ int main(){
         all_cards[6] = take_alt_card(deck52);
         //player bet
         //showdown
-                
-        qsort(all_cards, 7, sizeof(struct card), compare_cards_value);
 
         for (int i = 0; i < 7; ++i)
             printf("%d%c:", all_cards[i].value, all_cards[i].suit);
@@ -634,7 +628,7 @@ int main(){
             return 1;
         }
 
-        //if (best_combo[0].value == 8)
+        //if (best_combo[0].value == 1)
         //    score_tot += 1;
 
         printf("score combo: %d\nbest of combo: \n", best_combo[0].value);
@@ -650,11 +644,10 @@ int main(){
         for (int i = 0; i < nplayer; i++)
             printf("id:%d position:%d tokens:%d hand:%d%c:%d%c\n", players[i].player_id, players[i].position, players[i].tokens, players[i].hand[0].value, players[i].hand[0].suit, players[i].hand[1].value, players[i].hand[1].suit);
     }
-    //printf("\n%d",score_tot);
+    //printf("%d\n",score_tot);
 
     free(all_cards);
     free(players);
     free(deck52);
-    printf("end prog");
     return 0;
 }
